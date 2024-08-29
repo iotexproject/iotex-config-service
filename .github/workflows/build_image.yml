@@ -75,9 +75,8 @@ jobs:
         id: build-and-push-nginx
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./nginx
           platforms: linux/amd64
-          file: ./nginx/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-nginx.outputs.tags }}
           labels: ${{ steps.meta-nginx.outputs.labels }}
