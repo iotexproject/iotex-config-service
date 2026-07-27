@@ -230,3 +230,24 @@ if allowed_csrf_origins:
         allowed_csrf_origins.strip()
         for allowed_csrf_origins in allowed_csrf_origins.split(",")
     ]
+
+# Session/CSRF cookies were going out without the Secure attribute, so a browser
+# would replay an admin session over plaintext. Default to on whenever DEBUG is
+# off, which keeps local http development working without a second env var.
+# https://docs.djangoproject.com/en/4.0/ref/settings/#session-cookie-secure
+_secure_cookies_default = "false" if DEBUG else "true"
+SESSION_COOKIE_SECURE = bool(
+    strtobool(os.getenv("SESSION_COOKIE_SECURE", _secure_cookies_default))
+)
+CSRF_COOKIE_SECURE = bool(
+    strtobool(os.getenv("CSRF_COOKIE_SECURE", _secure_cookies_default))
+)
+SESSION_COOKIE_HTTPONLY = bool(
+    strtobool(os.getenv("SESSION_COOKIE_HTTPONLY", "true"))
+)
+
+# TLS is terminated by the proxy in front, so request.is_secure() is False
+# without this and Django treats every request as plaintext.
+# https://docs.djangoproject.com/en/4.0/ref/settings/#secure-proxy-ssl-header
+if bool(strtobool(os.getenv("USE_X_FORWARDED_PROTO", _secure_cookies_default))):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
